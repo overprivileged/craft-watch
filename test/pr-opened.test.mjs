@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { openItemsAt } from '../site/activity.js';
+import { visibleRange } from '../site/display-limits.js';
+import { connectorPRs } from '../site/arc-selection.js';
+import { pointDetails } from '../site/point-details.js';
+const app = { name: 'Example', repo: 'org/repo' };
+const pr = {number: 1, title: 'A change', state: 'MERGED', created_at:'2026-10-25T01:00:00Z', merged_at:'2026-10-25T02:00:00Z'};
+const opened = [{t:Date.parse(pr.created_at),pr}];
+const merged = [{t:Date.parse(pr.merged_at),pr}];
+const limits = {opened:null, merged:null};
+test('PR opened remains an event after merge while PR open disappears', () => {
+  const after = Date.parse('2026-10-25T03:00:00Z');
+  assert.equal(openItemsAt([pr],after).length,0);
+  assert.deepEqual(visibleRange(opened,after,null),[0,1]);
+  const detail = pointDetails({app,item:pr,kind:'opened'},after);
+  assert.equal(detail.eventTime,pr.created_at);
+  assert.equal(detail.eventLabel,'Created');
+  assert.ok(!detail.facts.includes('Open at the displayed time'));
+});
+test('connectors require both actual visible events, honor caps and rewind correctly', () => {
+  const before = Date.parse('2026-10-25T01:30:00Z'), after = Date.parse('2026-10-25T03:00:00Z');
+  assert.deepEqual([...connectorPRs(opened,merged,before,limits)],[]);
+  assert.deepEqual([...connectorPRs(opened,merged,after,limits)],[1]);
+  assert.deepEqual([...connectorPRs([],merged,after,limits)],[]);
+  assert.deepEqual([...connectorPRs(opened,[],after,limits)],[]);
+  const moreOpened = [...opened,{t:before,pr:{number:2}}];
+  assert.deepEqual([...connectorPRs(moreOpened,merged,after,{opened:1,merged:null})],[]);
+  assert.deepEqual([...connectorPRs(opened,merged,before,limits)],[]);
+});

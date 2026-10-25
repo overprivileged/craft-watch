@@ -4,93 +4,148 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Craft Watch</title>
-  <meta name="description" content="How fast the ArtCraft apps change, drawn live from public GitHub records. Signals, not a guarantee.">
+  <title>Craft Watch · Activity explorer</title>
+  <meta name="description" content="Follow ArtCraft development from pull requests to published releases. Choose your apps and replay their activity.">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <section class="hero" id="hero">
-    <div class="viewport">
-      <main class="stage">
-        <div class="nebula nebula-purple" aria-hidden="true"></div>
-        <div class="nebula nebula-teal" aria-hidden="true"></div>
-        <div class="stars" aria-hidden="true"></div>
-        <div class="stars2" aria-hidden="true"></div>
-
-        <div class="brand">CRAFT<span> WATCH</span><span class="live"><span class="live-dot" aria-hidden="true"></span>LIVE</span></div>
-        <div class="controls" role="group" aria-label="Time and apps">
-          <button type="button" data-mode="live" aria-pressed="true">Live</button>
-          <button type="button" data-mode="hour" aria-pressed="false">1 h in 10 s</button>
-          <button type="button" data-mode="day" aria-pressed="false">1 day in 30 s</button>
-          <button type="button" data-mode="month" aria-pressed="false">30 days in 30 s</button>
-          <button type="button" id="more" aria-expanded="false" hidden></button>
+  <main class="dashboard">
+    <header class="masthead">
+      <a href="index.html" class="brand">CRAFT<span> WATCH</span></a>
+      <span class="edition">ACTIVITY EXPLORER</span>
+      <p id="status" class="status" role="status">Loading public GitHub data…</p>
+    </header>
+    <section class="control-bar" aria-label="Apps and playback">
+      <details class="app-picker" id="app-picker">
+        <summary id="app-summary">Choose apps <span aria-hidden="true">⌄</span></summary>
+        <div class="picker-panel">
+          <label class="search-label" for="app-search">Find an app</label>
+          <input id="app-search" type="search" placeholder="Search apps…" autocomplete="off">
+          <div class="picker-actions"><button id="select-main" type="button">Main 8</button><button id="select-all" type="button">All apps</button><button id="select-none" type="button">Clear</button></div>
+          <div id="app-options" class="app-options" role="group" aria-label="Apps to display"></div>
+          <p id="search-empty" hidden>No apps match your search.</p>
+          <p class="picker-hint">Choose any combination. Your selection is saved in this browser and the URL.</p>
         </div>
-        <p id="clock" class="clock"></p>
+      </details>
+      <details class="app-picker layer-picker" id="layer-picker">
+        <summary id="layer-summary">Show on map <span id="layer-count">8/8</span><span aria-hidden="true">⌄</span></summary>
+        <div class="picker-panel layer-panel appearance-panel">
+          <p class="layer-heading">Show on map</p>
+          <p class="picker-hint">Switch each event type on or off, then choose its symbol, position and size. Changes apply immediately and keep your replay position.</p>
+          <div class="picker-actions"><button id="layers-all" type="button">Show all</button><button id="layers-none" type="button">Hide all</button></div>
+          <div id="appearance-controls" role="group" aria-label="Map layers and symbols"></div>
+          <div class="picker-actions"><button type="button" id="appearance-defaults">Reset appearance</button></div>
+          <p class="picker-hint">Sizes are map units and scale with the viewer. Arcs have their own position and thickness. Open items follow the displayed time. Your choices are saved; summary counts stay unchanged.</p>
+        </div>
+      </details>
+      <details class="app-picker limits-picker" id="limits-picker">
+        <summary id="limits-summary">Display limits <span aria-hidden="true">⌄</span></summary>
+        <div class="picker-panel limits-panel">
+          <div class="density-title"><p class="layer-heading">Tune the map density</p><button type="button" id="limits-close" aria-label="Close display limits">×</button></div>
+          <p class="picker-hint">Choose how each layer is selected <strong>per app</strong>. Changes apply immediately, without restarting playback.</p>
+          <div class="density-help"><span><strong>Count</strong> keeps the newest items.</span><span><strong>Probability</strong> samples across the whole range.</span></div>
+          <div class="picker-actions"><button type="button" id="limits-defaults">Reset defaults</button><button type="button" id="limits-unlimited">Everything unlimited</button></div>
+          <div id="density-controls"></div>
+          <p class="picker-hint">50% gives each eligible item an independent coin flip (0.5 probability), not an exact half. 0% hides all; 100% includes all. Samples stay stable through zoom and replay; Resample draws again for that layer only.</p>
+          <p class="picker-hint">Connectors require both their PR created and PR merged points to be visible. Summary counts stay unchanged. Settings are saved in this browser and the URL.</p>
+          <p id="limits-data-note" class="limits-data-note"></p>
+          <p class="picker-hint">Unlimited removes display caps, not the date range or open/closed rules. Larger settings can make playback slower.</p>
+        </div>
+      </details>
+      <span id="selection-label" class="selection-label"></span>
+      <div class="latest-controls modes" role="group" aria-label="Latest view">
+        <button type="button" data-mode="live" aria-pressed="true">Latest</button>
+        <label for="latest-range">Range</label>
+        <select id="latest-range" aria-label="Latest time range" title="Show this range ending at the latest data update">
+          <option value="1h">1 h</option>
+          <option value="8h">8 h</option>
+          <option value="1d">1 d</option>
+          <option value="3d">3 d</option>
+          <option value="7d">7 d</option>
+          <option value="14d">14 d</option>
+          <option value="30d" selected>30 d</option>
+        </select>
+      </div>
+      <div class="modes replay-modes" role="group" aria-label="Replay speed">
+        <button type="button" data-mode="hour" aria-pressed="false">1 h <span>in 10 s</span></button>
+        <button type="button" data-mode="day" aria-pressed="false">1 day <span>in 30 s</span></button>
+        <button type="button" data-mode="month" aria-pressed="false">30 days <span>in 30 s</span></button>
+      </div>
+    </section>
+
+    <div class="section-heading"><h2 id="metrics-heading">Activity in the last 30 days</h2><span id="count-scope">Selected apps only</span></div>
+    <section class="metrics" aria-labelledby="metrics-heading">
+      <div class="metric open"><span class="metric-label">○ Open PRs</span><strong id="count-open">—</strong><small id="open-note">At the latest update</small></div>
+      <div class="metric opened"><span class="metric-label">＋ PRs created</span><strong id="count-opened">—</strong><small>Changes proposed</small></div>
+      <div class="metric merged"><span class="metric-label">◆ PRs merged</span><strong id="count-merged">—</strong><small>Accepted into the code</small></div>
+      <div class="metric closed"><span class="metric-label">× PRs closed unmerged</span><strong id="count-closed">—</strong><small>Without merging</small></div>
+      <div class="metric commits"><span class="metric-label">· Recorded commits</span><strong id="count-commits">—</strong><small>Saved code on the default branch</small></div>
+      <div class="metric releases"><span class="metric-label">★ Releases</span><strong id="count-releases">—</strong><small>Published versions</small></div>
+    </section>
+
+    <section class="app-breakdown" aria-label="Activity by app">
+      <div id="app-breakdown-scroll" class="breakdown-scroll" role="region" aria-label="App activity comparison, scroll horizontally on small screens" tabindex="0">
+        <table class="breakdown-table" aria-label="Activity by selected app">
+          <thead><tr><th scope="col"><span>App</span><span id="app-breakdown-scope" class="breakdown-range"></span></th><th scope="col" class="open">○ Open PRs</th><th scope="col" class="opened">＋ PRs created</th><th scope="col" class="merged">◆ PRs merged</th><th scope="col" class="closed">× Closed unmerged</th><th scope="col" class="commits">· Recorded commits</th><th scope="col" class="releases">★ Releases</th></tr></thead>
+          <tbody id="app-breakdown-body"></tbody>
+        </table>
+      </div>
+      <p id="app-breakdown-empty" class="breakdown-empty" hidden>Choose apps above to compare their activity.</p>
+    </section>
+
+    <section class="map-panel" aria-label="Activity map and replay">
+      <div class="map-top">
+        <div class="map-time"><span class="map-kicker">ACTIVITY MAP <span class="midnight-key" title="Daily midnight in fixed Pacific Standard Time, UTC−8">│ Midnight PST</span></span><p id="clock" class="clock"></p></div>
         <p id="bigclock" class="bigclock" hidden></p>
-
-        <svg id="space" viewBox="0 0 1920 1080" role="img" aria-label="One ArtCraft core with a lane for each app over the last 30 days. Dotted arcs are pull requests, white dots are merges, stars and dots on the lanes are releases, faint pulses are commits, red rings mark changes that name an advisory."></svg>
-
-        <footer class="bar">
-          <p id="totals" class="totals"></p>
-          <p id="status" class="status">Loading data…</p>
-          <p class="beta">Beta · unofficial · not affiliated with ArtCraft/storytold · signals, not a guarantee</p>
-        </footer>
-      </main>
-    </div>
-
-    <div class="overlay">
-      <p class="head-1">The reviews were written on day 1.</p>
-      <p class="head-2">ArtCraft apps have changed <span id="total-changes" class="num">…</span> times since.</p>
-      <p class="head-3"><span id="since-date">…</span> · one change every <span id="per-second">…</span> seconds · live from public GitHub</p>
-
-      <div class="fact" aria-live="polite">
-        <p id="fact-label" class="fact-label"></p>
-        <p id="fact-text" class="fact-text"></p>
+        <div class="zoom-toolbar"><span id="zoom-state" role="status">Drag anywhere on the map to zoom · drag an app name to reorder · Esc cancels</span><span id="zoom-selection" hidden></span><button id="reset-order" type="button" hidden>Reset order</button><button id="reset-zoom" type="button" hidden>Reset zoom</button></div>
       </div>
-
-      <div class="cta-row">
-        <button type="button" id="watch" class="cta">Watch it live</button>
-        <button type="button" id="month" class="cta">30 days in 30 s</button>
+      <div class="map-stage">
+      <div class="map-scroll">
+        <svg id="space" viewBox="0 110 1920 720" role="group" aria-label="A lane for each selected app. Arcs show pull request lifetimes. Symbols show commits, currently open PRs, PR creation events, open issues, merged PRs, PRs closed without merging and releases. Their shapes, sizes and positions can be customized."></svg>
       </div>
-      <p class="since">In the last hour of data: <strong id="since-count">0</strong> changes</p>
-    </div>
-    <button type="button" id="unwatch" class="unwatch">Back to the calm view</button>
-  </section>
+      <div class="legend" aria-label="Map legend">
+        <span data-legend="commits"><b class="commits">·</b> Commit</span><span data-legend="prs"><b class="opened">○</b> PR open</span><span data-legend="opened"><b class="pr-opened">▲</b> PR created</span><span data-legend="issues"><b class="issues">□</b> Issue open</span><span data-legend="merged"><b class="merged">◆</b> PR merged</span><span data-legend="closed"><b class="closed">×</b> Closed unmerged</span><span data-legend="releases"><b class="releases">★</b> Release</span>
+        <a href="#guide">About arcs ↗</a>
+      </div>
+      </div>
+      <p id="empty-selection" class="empty-selection" hidden>Choose one or more apps above to start exploring.</p>
+      <section class="point-details" aria-label="Point details" aria-live="polite" aria-atomic="true">
+        <div class="point-details-header"><strong id="point-heading">Point details</strong><a id="point-link" target="_blank" rel="noopener" hidden>Open on GitHub ↗</a></div>
+        <p id="point-time" class="point-time"></p>
+        <p id="point-title">Hover over a symbol or arc, or focus it with Tab, to inspect it here.</p>
+        <p id="point-facts">The last inspected point stays here so you can read its details.</p>
+      </section>
+      <p id="layers-empty" class="map-note" hidden>All map layers are hidden. Open “Show on map” to turn them back on.</p>
+      <p id="map-limits-note" class="map-note"></p>
+      <p class="map-note">Hover or focus a point for details in the panel above; click a PR, issue or release to open GitHub. Open markers sit at creation time (or the left edge for older items). Counters use all collected records.</p>
+      <div class="playback" id="playback" hidden>
+        <button id="play-pause" type="button" aria-label="Pause replay">Pause</button>
+        <button id="restart" type="button" aria-label="Restart replay">↺</button>
+        <div class="scrubber"><input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Replay time"><div><span id="range-start"></span><span id="range-end"></span></div></div>
+        <span id="play-progress" class="play-progress">0%</span>
+      </div>
+    </section>
 
-  <section class="section" aria-labelledby="news-title">
-    <h2 id="news-title">What’s new this week</h2>
-    <p class="note">Plain sentences from the public titles of merged changes, all apps, newest first. Up to 10.</p>
-    <ul id="weekly-news" class="list"></ul>
-  </section>
+    <div class="section-heading"><h2 id="feed-heading">Latest events</h2><span>At the displayed time</span></div>
+    <ol id="event-feed" class="event-feed" aria-label="Recent events at the displayed time"></ol>
+    <p id="coverage-note" class="coverage-note"></p>
 
-  <section class="section" aria-labelledby="download-title">
-    <h2 id="download-title">Get the real download</h2>
-    <p class="note">Official GitHub release pages only. Check the file against the published checksum when one is listed.</p>
-    <ul id="downloads" class="downloads"></ul>
-  </section>
-
-  <section class="section" id="decide-title" aria-labelledby="decide-heading">
-    <h2 id="decide-heading">How we decide</h2>
-    <ul class="levels">
-      <li><strong>🟢 Looks calm.</strong> No crash-like reports spiked after the newest release, and we found no published security advisories for it.</li>
-      <li><strong>🟡 Wait a day.</strong> Reports that name the newest release, in its first 48 hours, are well above the usual for the app.</li>
-      <li><strong>🔴 Update now.</strong> A change that names an advisory shipped in a release. We point to that release.</li>
-    </ul>
-    <p class="note">Based on public GitHub records only. Signals, not a guarantee.</p>
-  </section>
-
-  <section class="section pick" aria-labelledby="pick-title">
-    <h2 id="pick-title" class="pick-title">Pick your app:</h2>
-    <div id="pick-row" class="pick-row"></div>
-  </section>
-
-  <footer class="section foot">
-    <p>No login, no cookies, no tracking · open source</p>
-    <p class="beta">Beta · unofficial · not affiliated with ArtCraft/storytold · signals, not a guarantee</p>
-  </footer>
-
+    <details id="guide" class="guide">
+      <summary>What do the symbols actually mean?</summary>
+      <div class="guide-grid">
+        <div><h3><span class="commits">·</span> Commit</h3><p>A saved change to source code. This map records commits on the default branch. A commit does not by itself mean a new downloadable version exists.</p></div>
+        <div><h3><span class="opened">○</span> Pull request created</h3><p>Someone proposes a change for review. The arc starts when the PR is created and spans the time until it is merged or closed. An amber dashed arc is still in progress at the displayed time.</p></div>
+        <div><h3><span class="merged">◆</span> Merged / <span class="closed">×</span> closed</h3><p>Merged means the proposed change was accepted into its target branch. Closed means it ended without merging. A merge can later be included in a release; the time order alone does not prove it shipped.</p></div>
+        <div><h3><span class="releases">★</span> Release published</h3><p>A named version was published on GitHub, sometimes as a prerelease. Open the star to see the notes and available downloads. Release, commit, and PR counts measure different things and should not be added together.</p></div>
+      </div>
+      <p>Use “Show on map” to switch layers independently and “Display limits” to set per-app caps or choose Unlimited. Commit and release caps keep the newest events reached so far; arc caps keep the PRs with the most recent activity. Capped items can disappear when newer items take their place. Unlimited removes that replacement behavior. The “Show version above every release symbol” checkbox updates immediately: checked shows every version label, unchecked hides them all. Labels may overlap when stars are close together. Amber circles and cyan squares represent recorded PRs and issues still open at the displayed time; they disappear when merged or closed. The PR created layer instead shows creation events within the range and keeps them after merging or closing. Connector lines require visible PR created and PR merged endpoints. Historical states are approximate because reopen transitions and some older records are not collected.</p>
+      <p>Arc height is only for legibility. Its horizontal span shows elapsed time. Latest shows your chosen range ending at the latest data update. Both Latest and replays use an evenly spaced time scale. Choosing a range returns to Latest. Open PR totals are separate from bug reports (GitHub issues).</p>
+      <p>Historical open PR totals are estimates reconstructed from the latest count and recorded openings, merges, and closures. Reopen transitions are not collected. Missing records and delayed app updates can affect these estimates.</p>
+    </details>
+    <section class="app-links-section" aria-labelledby="app-links-title"><h2 id="app-links-title">Explore the selected apps</h2><div id="app-links" class="app-links"></div></section>
+    <footer class="footer"><span>Public GitHub data · no analytics · selection saved locally</span><span>Beta · unofficial · not affiliated with ArtCraft/storytold · signals, not a guarantee</span></footer>
+  </main>
   <script src="app.js" type="module"></script>
-  <script src="landing.js" type="module"></script>
 </body>
 </html>

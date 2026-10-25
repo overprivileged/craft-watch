@@ -6,7 +6,10 @@
   "type": "module",
   "scripts": {
     "collect": "node scripts/collect.mjs",
-    "dev": "node scripts/dev.mjs"
+    "dev": "node scripts/dev.mjs",
+    "data:preview": "node scripts/preview-data.mjs",
+    "test": "node --test",
+    "data:commits": "node scripts/backfill-commits.mjs"
   },
   "engines": {
     "node": ">=20"
