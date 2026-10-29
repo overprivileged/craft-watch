@@ -2,6 +2,7 @@
 // Keeps per-repo state in data/state.json (cached between runs) and writes the summary to data/apps.json.
 // Each run asks GitHub only for PRs and issues updated since the last run. Needs GITHUB_TOKEN; never prints it.
 import { readFile, writeFile, mkdir, stat, rename } from 'node:fs/promises';
+import { readCommitHistory } from './commit-history.mjs';
 
 const ROOT = new URL('../', import.meta.url);
 const WINDOW_DAYS = 30;
@@ -380,7 +381,21 @@ async function collectApp(app, previous, runCursor) {
 
   const history = repo.defaultBranchRef?.target?.history;
   const commitMessages = history?.nodes.map((n) => n.message) ?? [];
-  const commitTimes = history?.nodes.map((n) => n.committedDate) ?? [];
+  let commitTimes = history?.nodes.map((n) => n.committedDate) ?? [];
+  let commitTotal = history?.totalCount ?? 0;
+  let commitsTruncated = commitTotal > commitTimes.length;
+  if (commitsTruncated && repo.defaultBranchRef?.name) {
+    try {
+      const paged = await readCommitHistory(graphql, {
+        owner, name, branch: repo.defaultBranchRef.name, since: sinceIso, until: new Date(runStart).toISOString(),
+      });
+      commitTimes = paged.times;
+      commitTotal = paged.total;
+      commitsTruncated = paged.truncated;
+    } catch (error) {
+      console.log(`note  ${app.repo}: commit history pagination unavailable (${error.message}); latest timestamps retained`);
+    }
+  }
   const aiTagged = commitMessages.filter((m) => AI_COAUTHOR.test(m)).length;
 
   const prList = Object.values(prs);
@@ -402,7 +417,7 @@ async function collectApp(app, previous, runCursor) {
   const latest = releases.find((r) => !r.draft) ?? null;
   // The latest release is always listed, even when it is older than the kept range.
   if (latest && !releasesKept.includes(latest)) releasesKept.push(latest);
-  // Exact commits in the last 24 hours (commit_times holds only the newest 100).
+  // Exact commits in the last 24 hours, even when timestamp collection is capped or fails.
   const commits24h = (await graphql(COMMITS_SINCE_QUERY, { owner, name, since: new Date(runStart - 24 * 3600e3).toISOString() }))
     .repository?.defaultBranchRef?.target?.history?.totalCount ?? null;
 
@@ -418,7 +433,7 @@ async function collectApp(app, previous, runCursor) {
     archived: repo.isArchived,
     default_branch: repo.defaultBranchRef?.name ?? null,
     truncated: {
-      commits: (history?.totalCount ?? 0) > commitMessages.length,
+      commits: commitsTruncated,
       pulls: pulls.truncated,
       issues: issues.truncated,
     },
@@ -429,7 +444,7 @@ async function collectApp(app, previous, runCursor) {
       issues_complete_from: completeFrom(gapsOut.issues),
     },
     commits: {
-      total: history?.totalCount ?? 0,
+      total: commitTotal,
       last_24h: commits24h,
       ai_tagged: aiTagged,
       ai_tagged_pct: commitMessages.length ? Math.round((aiTagged / commitMessages.length) * 100) : null,
