@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-01",
+  "apps": [
+    {
+      "repo": "storytold/artcraft",
+      "ok": true,
+      "commits_30d": 13,
+      "prs_open": 138,
+      "issues_open": 471,
+      "releases_30d": 0,
+      "latest": "artcraft-v0.41.0"
+    },
+    {
+      "repo": "storytold/photocraft",
+      "ok": true,
+      "commits_30d": 8127,
+      "prs_open": 1235,
+      "issues_open": 2402,
+      "releases_30d": 19,
+      "latest": "v0.18.0"
+    },
+    {
+      "repo": "storytold/filmcraft",
+      "ok": true,
+      "commits_30d": 3206,
+      "prs_open": 748,
+      "issues_open": 1039,
+      "releases_30d": 16,
+      "latest": "v0.15.0"
+    },
+    {
+      "repo": "storytold/pdfcraft",
+      "ok": true,
+      "commits_30d": 3786,
+      "prs_open": 1214,
+      "issues_open": 1538,
+      "releases_30d": 17,
+      "latest": "v0.16.1"
+    },
+    {
+      "repo": "storytold/effectcraft",
+      "ok": true,
+      "commits_30d": 4004,
+      "prs_open": 199,
+      "issues_open": 623,
+      "releases_30d": 19,
+      "latest": "v0.19.0"
+    },
+    {
+      "repo": "storytold/figcraft",
+      "ok": true,
+      "commits_30d": 2944,
+      "prs_open": 65,
+      "issues_open": 140,
+      "releases_30d": 13,
+      "latest": "v0.13.1"
+    },
+    {
+      "repo": "storytold/lightcraft",
+      "ok": true,
+      "commits_30d": 4618,
+      "prs_open": 706,
+      "issues_open": 648,
+      "releases_30d": 17,
+      "latest": "v0.16.0"
+    },
+    {
+      "repo": "storytold/vectorcraft",
+      "ok": true,
+      "commits_30d": 7109,
+      "prs_open": 249,
+      "issues_open": 748,
+      "releases_30d": 21,
+      "latest": "v0.19.0"
+    },
+    {
+      "repo": "storytold/designcraft",
+      "ok": true,
+      "commits_30d": 4321,
+      "prs_open": 294,
+      "issues_open": 434,
+      "releases_30d": 16,
+      "latest": "v0.15.2"
+    },
+    {
+      "repo": "storytold/wordcraft",
+      "ok": true,
+      "commits_30d": 2446,
+      "prs_open": 1109,
+      "issues_open": 1225,
+      "releases_30d": 12,
+      "latest": "v0.13.2"
+    },
+    {
+      "repo": "storytold/gridcraft",
+      "ok": true,
+      "commits_30d": 2473,
+      "prs_open": 743,
+      "issues_open": 810,
+      "releases_30d": 13,
+      "latest": "v0.14.2"
+    },
+    {
+      "repo": "storytold/deckcraft",
+      "ok": true,
+      "commits_30d": 1776,
+      "prs_open": 302,
+      "issues_open": 305,
+      "releases_30d": 12,
+      "latest": "v0.13.1"
+    },
+    {
+      "repo": "storytold/cadcraft",
+      "ok": true,
+      "commits_30d": 1016,
+      "prs_open": 617,
+      "issues_open": 527,
+      "releases_30d": 13,
+      "latest": "v0.15.1"
+    },
+    {
+      "repo": "storytold/soundcraft",
+      "ok": true,
+      "commits_30d": 1345,
+      "prs_open": 222,
+      "issues_open": 281,
+      "releases_30d": 12,
+      "latest": "v0.15.0"
+    },
+    {
+      "repo": "storytold/AniCraft",
+      "ok": true,
+      "commits_30d": 0,
+      "prs_open": 0,
+      "issues_open": 4,
+      "releases_30d": 0,
+      "latest": null
+    },
+    {
+      "repo": "storytold/craft-launcher",
+      "ok": true,
+      "commits_30d": 369,
+      "prs_open": 192,
+      "issues_open": 464,
+      "releases_30d": 16,
+      "latest": "v0.11.1"
+    }
+  ]
+}
