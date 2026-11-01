@@ -116,7 +116,26 @@
       "colour": "#CBD5E1",
       "download": "https://github.com/storytold/craft-launcher/releases",
       "day_one": "2026-10-10T04:00:18Z"
+    },
+    {
+      "name": "TextureCraft",
+      "repo": "storytold/texturecraft",
+      "colour": "#34D399",
+      "download": "https://github.com/storytold/texturecraft/releases"
+    },
+    {
+      "name": "Craft Anything",
+      "repo": "storytold/craft-anything",
+      "colour": "#67E8F9",
+      "download": "https://github.com/storytold/craft-anything/releases"
+    },
+    {
+      "name": "SolidCraft",
+      "repo": "tangency-labs/solidcraft",
+      "colour": "#F87171",
+      "download": "https://github.com/tangency-labs/solidcraft/releases"
     }
   ],
-  "_note_day_one": "day_one: the publish time of each app's first release as seen in our data on 24 Oct 2026 (ArtCraft: the launch release artcraft-v0.41.0). The landing headline counts commits since this date, so it never shrinks when the 30-day window moves on."
+  "_note_day_one": "day_one: the publish time of each app's first release as seen in our data on 24 Oct 2026 (ArtCraft: the launch release artcraft-v0.41.0). The landing headline counts commits since this date, so it never shrinks when the 30-day window moves on.",
+  "_note_new_apps": "Added 1 Nov 2026 from the ArtCraft launcher catalog: TextureCraft and Craft Anything (official, storytold) and SolidCraft (community app by Tangency Labs, its own repo). No day_one yet: day one = their earliest kept release until we pin it."
 }
