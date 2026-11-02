@@ -304,6 +304,11 @@ body {
   transform-origin: center;
 }
 
+/* Points that don't twinkle sit at the soft resting glow. */
+.still {
+  opacity: 0.7;
+}
+
 /* Most points: opacity only, which stays cheap even for hundreds of points. */
 .twinkle-soft {
   animation: point-twinkle-soft var(--tw, 3.6s) ease-in-out infinite;

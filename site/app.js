@@ -57,14 +57,18 @@ function hash01(text) {
 // the rest only twinkle softly. Animating size on every point made the map drop to ~15 fps.
 const FLARE_SHARE = 0.125;
 const flares = (key) => hash01(`${key}!`) < FLARE_SHARE;
+const TWINKLE_SHARE = 0.35;
 
 // Twinkle timing for one point: its own speed and its own place in the cycle.
 function twinkle(key) {
   const a = hash01(key);
   const b = hash01(`${key}#`);
   const duration = 2.4 + a * 3.6; // 2.4–6 s
+  // Only some points twinkle (picked by hash); the rest glow steadily. Each animated SVG point
+  // costs a repaint every frame, so fewer moving points keeps the map smooth on slow computers.
+  const moving = flares(key) || hash01(`${key}~`) < TWINKLE_SHARE;
   return {
-    class: flares(key) ? 'twinkle' : 'twinkle-soft',
+    class: flares(key) ? 'twinkle' : moving ? 'twinkle-soft' : 'still',
     style: `--tw: ${duration.toFixed(2)}s; animation-delay: ${(-b * duration).toFixed(2)}s`,
   };
 }
@@ -241,9 +245,21 @@ function createLane(app, index, count, defs, group) {
   return { app, index, count, y, colour, compact: count > MAIN_APPS.length, samples: sampleLane(line), lane, defs };
 }
 
+// The map draws at most this many commit points per lane, spread evenly over time. Since the data
+// keeps up to ~1,000 commits per app, drawing every one meant ~9,000 animated points and a frozen
+// page; the design was made for ~100 per lane. Totals and counts still use every commit.
+const DOT_CAP = 100;
+const DOT_CAP_COMPACT = 60;
+
+function evenSample(list, cap) {
+  if (list.length <= cap) return list;
+  const step = list.length / cap;
+  return Array.from({ length: cap }, (_, k) => list[Math.floor(k * step)]);
+}
+
 function drawCommits(l) {
-  for (const iso of l.app.commit_times ?? []) {
-    if (!inScale(iso)) continue;
+  const times = (l.app.commit_times ?? []).filter(inScale);
+  for (const iso of evenSample(times, l.compact ? DOT_CAP_COMPACT : DOT_CAP)) {
     const p = place(l.samples, iso);
     if (p) addEvent(p.t, commitNode(p, l.colour, `${l.app.repo}|${iso}`), l.lane);
   }
