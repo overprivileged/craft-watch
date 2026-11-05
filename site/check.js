@@ -123,9 +123,6 @@ function guessApp(text) {
     .sort((a, b) => b.repo.length - a.repo.length)[0] ?? null;
 }
 
-function latestOf(app) {
-  return allFiles.filter((f) => f.app === app && f.date).sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
-}
 
 function reportUrl(link = '') {
   const shown = link || '(paste the link here)';
@@ -260,6 +257,39 @@ const phoneHint = (id) => {
   return allFiles.some((f) => wanted.test(f.name)) ? 'official file listed' : 'no official app';
 };
 
+// File TYPES a computer download comes as, per device. Only types this app publishes (names from files.json).
+const typesFor = (app) => allFiles.filter((f) => f.app === app).map((f) => f.name);
+function deviceTypes(app, device) {
+  const names = typesFor(app);
+  const has = (rx) => names.some((n) => rx.test(n));
+  const items = [];
+  const notes = [];
+  if (device === 'mac' && has(/\.dmg$/i)) {
+    const macos = names.some((n) => /\.dmg$/i.test(n) && /macos/i.test(n));
+    items.push({ title: '.dmg', body: `${macos ? 'With ‘macos’ in the name. ' : ''}Works on all Macs.` });
+  }
+  if (device === 'windows') {
+    const installers = names.filter((n) => /\.(msi|exe)$/i.test(n));
+    const x64 = installers.some((n) => /x64/i.test(n));
+    if (installers.some((n) => /\.msi$/i.test(n))) items.push({ title: '.msi installer', body: x64 ? 'Most PCs: ‘x64’.' : '' });
+    else if (installers.some((n) => /\.exe$/i.test(n))) items.push({ title: '.exe installer', body: x64 ? 'Most PCs: ‘x64’.' : '' });
+    if (has(/portable.*\.zip$/i)) items.push({ title: 'portable.zip', body: 'No install rights? Unzip it and run it.' });
+    if (names.some((n) => /arm64/i.test(n) && /(windows|win)/i.test(n) && /\.(msi|exe|zip)$/i.test(n))) items.push({ title: 'arm64 file', body: 'For Surface and other ARM PCs.' });
+  }
+  if (device === 'linux') {
+    if (has(/\.AppImage$/i)) items.push({ title: '.AppImage', body: 'Any Linux. Easiest.' });
+    if (has(/\.deb$/i)) items.push({ title: '.deb', body: 'Ubuntu, Debian, Mint.' });
+    if (has(/\.rpm$/i)) items.push({ title: '.rpm', body: 'Fedora, openSUSE.' });
+    const x86 = names.some((n) => /x86_64/i.test(n) && /\.(AppImage|deb|rpm)$/i.test(n));
+    const arm = names.some((n) => /aarch64/i.test(n) && /\.(AppImage|deb|rpm)$/i.test(n));
+    if (x86 || arm) notes.push([x86 ? 'Most computers: ‘x86_64’.' : '', arm ? 'ARM computers: ‘aarch64’.' : ''].filter(Boolean).join(' '));
+  }
+  return { items, notes };
+}
+const typeList = (items) => el('div', { class: 'typelist' }, ...items.map((it) => el('div', { class: 'typecard' },
+  svgIcon(CHOICES.find((c) => c.id === 'file').icon),
+  el('span', { class: 'text' }, el('strong', { text: it.title }), it.body ? el('small', { text: it.body }) : ''))));
+
 function renderDownload() {
   const body = $('download-body');
   if (!data) { body.replaceChildren(el('p', { class: 'lead', text: 'Loading the official list…' })); return; }
@@ -292,16 +322,12 @@ function renderDownload() {
     })));
 
   if (!dl.device) return;
-  const latest = latestOf(app);
-  const latestLine = latest ? el('p', { class: 'fine', text: `Latest release: ${latest.tag}${latest.date ? ` (${dateFmt(latest.date)})` : ''}` }) : '';
-
   if (dl.device === 'android' || dl.device === 'iphone') {
     const wanted = dl.device === 'android' ? /\.(apk|aab)$/i : /\.ipa$/i;
     const phoneFile = allFiles.filter((f) => f.app === app && wanted.test(f.name)).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))[0];
     if (phoneFile) {
       body.append(card('ok', 'The team published a phone app.',
-        el('p', { text: `${app.name} ${phoneFile.tag}: ${phoneFile.name}` }),
-        el('p', { class: 'fine', text: `Released ${dateFmt(phoneFile.date)}` }),
+        el('p', { text: `${app.name} is on its official release page.` }),
         bigLink(`${app.download.replace(/\/releases$/, '')}/releases/tag/${encodeURIComponent(phoneFile.tag)}`, 'Open the official release page')));
     } else {
       body.append(card('bad', 'There is no real phone app yet.',
@@ -309,11 +335,22 @@ function renderDownload() {
         bigLink(app.download, `Get the real ${app.name} for your computer`)));
     }
   } else {
-    body.append(card('ok', 'Get it here. This is the real one.',
+    const label = DEVICE_LIST.find((d) => d.id === dl.device).label;
+    const { items, notes } = deviceTypes(app, dl.device);
+    const nodes = [
       el('p', { text: `${app.name} is published only on its official GitHub page.` }),
       makerLine(app),
-      latestLine,
-      bigLink(app.download, `Open the real ${app.name} download page`)));
+    ];
+    if (items.length) {
+      nodes.push(el('p', { class: 'step', text: `Look for these on ${label}` }), typeList(items), ...notes.map((n) => el('p', { class: 'fine', text: n })));
+    } else {
+      nodes.push(el('p', { text: `We don’t see a ${label} file in the releases we track. Check the official page.` }));
+    }
+    nodes.push(
+      el('p', { class: 'fine', text: 'Ignore .asc, .sig, .zsync and SHA256SUMS: those are for checking, not installing.' }),
+      bigLink(app.download, 'Open the official releases page'),
+      el('a', { class: 'link-btn', href: '#file', text: 'After downloading, check it here in 30 seconds →' }));
+    body.append(card(items.length ? 'ok' : 'wait', items.length ? 'Get it here. This is the real one.' : 'Check the official page.', ...nodes));
   }
 }
 
