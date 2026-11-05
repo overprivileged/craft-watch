@@ -20,6 +20,7 @@
       <div class="navrow">
         <a href="index.html">← Space view</a>
         <a id="journey-link" href="journey.html">Journey of one change →</a>
+        <a href="check.html">Check your download</a>
         <span id="status" class="status">Loading data…</span>
       </div>
     </header>
@@ -62,7 +63,8 @@
         <h2 id="h-real">Get the real one</h2>
         <p>Official source: <a id="official" href="#">the releases page on GitHub</a>. Download only from there.</p>
         <p id="latest-line" class="note"></p>
-        <p class="note">Check the file against the published checksum (only when checksums are listed for the release):</p>
+        <p><a href="check.html">Check your downloaded file →</a> <span class="note">(in your browser, nothing uploaded)</span></p>
+        <p class="note">Or check it yourself against the published checksum:</p>
         <pre class="code">macOS:   shasum -a 256 path/to/file
 Linux:   sha256sum path/to/file
 Windows: certutil -hashfile path\to\file SHA256</pre>

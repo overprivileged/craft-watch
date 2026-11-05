@@ -46,6 +46,8 @@ jobs:
           mkdir -p _site/data
           cp -R site/. _site/
           cp data/apps.json _site/data/
+          if [ -f data/files.json ]; then cp data/files.json _site/data/; fi
+          if [ -f data/unofficial.json ]; then cp data/unofficial.json _site/data/; fi
           if [ -d data/history ]; then cp -R data/history _site/data/; fi
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

@@ -20,7 +20,7 @@ createServer(async (req, res) => {
   const { pathname } = new URL(req.url, `http://localhost:${PORT}`);
   const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
   // Only the published data files are served, not the private state cache.
-  const isData = /^data\/(apps\.json|history\/[\w-]+\.json)$/.test(relative);
+  const isData = /^data\/(apps\.json|files\.json|unofficial\.json|history\/[\w-]+\.json)$/.test(relative);
   const base = relative.startsWith('data/') ? ROOT : join(ROOT, 'site');
   const file = resolve(base, normalize(relative));
   if (relative.startsWith('data/') && !isData) {

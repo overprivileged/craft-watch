@@ -8,6 +8,7 @@ const ROOT = new URL('../', import.meta.url);
 const WINDOW_DAYS = 30;
 const PAGE_SIZE = 50;
 const MAX_PAGES = 6; // newest 300 PRs and 300 issues per repo; anything older is flagged as truncated
+const SKIP_FILE = /(\.(asc|sig|minisig|zsync|sha256|sha512)$|oci-manifest\.json$|oci\.sig$|^SHA256SUMS|^SHA512SUMS|checksums?\b)/i;
 const RELEASE_KEEP_DAYS = 120; // releases listed for the version picker and maps; counts still use the 30-day window
 // Backfill: PRs and issues the newest-first walk could not reach (a first full fetch, or a run with more than 300 updates)
 // are read later through search, one time slice at a time, a few calls per repo per run, until the gap is closed.
@@ -417,6 +418,19 @@ async function collectApp(app, previous, runCursor) {
   const latest = releases.find((r) => !r.draft) ?? null;
   // The latest release is always listed, even when it is older than the kept range.
   if (latest && !releasesKept.includes(latest)) releasesKept.push(latest);
+  // Official files with GitHub's own SHA-256 digest, for the "Check your download" page (signature, zsync and checksum files skipped).
+  const officialFiles = [];
+  let filesWithoutDigest = 0;
+  for (const r of releasesKept) {
+    for (const a of r.assets) {
+      if (SKIP_FILE.test(a.name)) continue;
+      if (typeof a.digest === 'string' && /^sha256:[0-9a-f]{64}$/.test(a.digest)) {
+        officialFiles.push([a.digest.slice(7), r.tag_name, a.name, a.size, r.published_at ? r.published_at.slice(0, 10) : null]);
+      } else {
+        filesWithoutDigest += 1;
+      }
+    }
+  }
   // Exact commits in the last 24 hours, even when timestamp collection is capped or fails.
   const commits24h = (await graphql(COMMITS_SINCE_QUERY, { owner, name, since: new Date(runStart - 24 * 3600e3).toISOString() }))
     .repository?.defaultBranchRef?.target?.history?.totalCount ?? null;
@@ -536,7 +550,7 @@ async function collectApp(app, previous, runCursor) {
   return {
     output,
     rateLimit: summary.rateLimit.remaining,
-    repoState: { cursor: runCursor, prs, issues: iss, gaps: gapsOut, last_good: output },
+    repoState: { cursor: runCursor, prs, issues: iss, gaps: gapsOut, last_good: output, files: { list: officialFiles, without_digest: filesWithoutDigest } },
   };
 }
 
@@ -586,7 +600,8 @@ const readJson = async (path, fallback) => (await exists(path))
   ? JSON.parse(await readFile(path, 'utf8'))
   : fallback;
 
-const apps = JSON.parse(await readFile(new URL('repos.json', ROOT), 'utf8')).apps;
+const repoFile = JSON.parse(await readFile(new URL('repos.json', ROOT), 'utf8'));
+const apps = repoFile.apps;
 const statePath = new URL('data/state.json', ROOT);
 const outPath = new URL('data/apps.json', ROOT);
 const tmpPath = new URL('data/apps.json.tmp', ROOT);
@@ -647,6 +662,22 @@ if (enoughToPublish) {
 } else {
   console.error(`Only ${succeeded} of ${results.length} apps refreshed. apps.json was not replaced; the previous data stays.`);
   process.exitCode = 1;
+}
+
+// Official file fingerprints for the "Check your download" page: loaded only on that page, never by the map.
+// An app whose refresh failed keeps the list from its last good run (stored in the state cache).
+if (enoughToPublish) {
+  const filesOut = { generated_at: new Date(runStart).toISOString(), keep_days: RELEASE_KEEP_DAYS, site: repoFile.org.site, apps: [], files: [], without_digest: 0 };
+  apps.forEach((app, index) => {
+    const saved = state.repos[app.repo]?.files;
+    filesOut.apps.push({ name: app.name, maker: app.maker ?? null, repo: app.repo, colour: app.colour, download: app.download ?? `https://github.com/${app.repo}/releases` });
+    for (const f of saved?.list ?? []) filesOut.files.push([f[0], index, f[1], f[2], f[3], f[4]]);
+    filesOut.without_digest += saved?.without_digest ?? 0;
+  });
+  const filesTmp = new URL('data/files.json.tmp', ROOT);
+  await writeFile(filesTmp, JSON.stringify(filesOut) + '\n');
+  await rename(filesTmp, new URL('data/files.json', ROOT));
+  console.log(`files: ${filesOut.files.length} official files with a digest, ${filesOut.without_digest} without`);
 }
 
 // One small snapshot per day: the first run of the UTC day writes it, later runs leave it alone.

@@ -10,3 +10,5 @@ design/
 data/apps.json
 data/state.json
 data/apps.json.tmp
+data/files.json
+data/files.json.tmp

@@ -131,6 +131,7 @@
     },
     {
       "name": "SolidCraft",
+      "maker": "Tangency Labs, in the ArtCraft launcher",
       "repo": "tangency-labs/solidcraft",
       "colour": "#F87171",
       "download": "https://github.com/tangency-labs/solidcraft/releases"

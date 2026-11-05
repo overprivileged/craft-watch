@@ -10,3 +10,9 @@ no personal info (overprivileged account only, no local paths in code or commits
 - Never write a token, key, password, email, real name or local home-folder path into any file, commit message or output. Read the GitHub token only from the environment (`GITHUB_TOKEN`); never print it.
 - Before EVERY commit: check the staged diff for secrets, emails, personal names and local paths; stop and tell me if you find any.
 - Before the repo goes public (phase 9): run a full check (`git log --format='%an <%ae>' | sort -u` must show only Overprivileged + noreply; scan all files and history for tokens/emails/paths) and show me the result.
+
+## No slop (look and words)
+Real data only (never invented counters, quotes or results). No AI-generated images. One accent effect max (one gradient
+or one glow), no neon/glossy/3D. Max 3 colours + green/red/yellow status. Motion only when it explains something.
+No hype words (ultimate, powerful, AI-powered, 100%, guaranteed). Never promise "safe": say what was checked.
+Short human sentences, no exclamation spam, no fake urgency. No popups, email capture or nags.
