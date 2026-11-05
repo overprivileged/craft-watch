@@ -228,6 +228,16 @@ function renderHome() {
 
 // ---- 1. Download an app ---------------------------------------------------
 const dl = { app: null, device: null };
+// The app's own icon (site/icons, 64 px) over its coloured letter. If the icon is missing, the letter stays.
+const appBadge = (app) => {
+  const letter = el('span', { class: 'dot', text: app.name.charAt(0), 'aria-hidden': 'true' });
+  letter.style.background = safeColour(app.colour);
+  const short = app.repo.split('/')[1].toLowerCase();
+  const icon = el('img', { class: 'app-icon', src: `icons/${short}.png`, alt: '', width: 32, height: 32, loading: 'lazy' });
+  icon.addEventListener('error', () => icon.remove());
+  return el('span', { class: 'badge-wrap' }, letter, icon);
+};
+
 const DEVICE_LIST = [
   { id: 'mac', label: 'Mac', emoji: '🍎' },
   { id: 'windows', label: 'Windows', emoji: '🪟' },
@@ -244,13 +254,12 @@ function renderDownload() {
     body.replaceChildren(
       el('p', { class: 'step', text: 'Step 1 of 2 · Which app?' }),
       el('div', { class: 'tiles' }, ...data.apps.map((app) => {
-        const dot = el('span', { class: 'dot', text: app.name.charAt(0), 'aria-hidden': 'true' });
-        dot.style.background = safeColour(app.colour);
-        const tile = el('button', { class: 'tile', type: 'button' }, dot,
+        const tile = el('button', { class: 'tile', type: 'button' }, appBadge(app),
           el('span', { class: 'text' }, el('strong', { text: app.name }), app.maker ? el('small', { text: `Made by ${app.maker}` }) : ''));
         tile.addEventListener('click', () => { dl.app = app; dl.device = null; renderDownload(); reveal(body.querySelector('.step')); });
         return tile;
-      })));
+      })),
+      el('p', { class: 'fine', text: 'Fakes can copy logos too, so always check the file.' }));
     return;
   }
 

@@ -67,6 +67,9 @@
     .tile small { color: var(--muted); font-size: 12px; line-height: 1.35; margin-top: 2px; }
     .tile:hover, .device:hover, .pick:hover, .tile:focus-visible, .device:focus-visible, .pick:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
     .tile[aria-pressed="true"], .device[aria-pressed="true"] { border-color: var(--accent); }
+    .badge-wrap { position: relative; flex: 0 0 32px; width: 32px; height: 32px; }
+    .badge-wrap .dot, .app-icon { position: absolute; top: 0; left: 0; width: 32px; height: 32px; border-radius: 10px; }
+    .app-icon { display: block; object-fit: contain; }
     .dot { flex: 0 0 32px; width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: #0B0D12; font-weight: 800; font-size: 15px; }
     .devices { display: flex; flex-wrap: wrap; gap: 8px; }
     .device { flex: 1 1 140px; justify-content: center; font-weight: 800; }
@@ -265,6 +268,7 @@
     <footer class="foot">
       <p class="fine">Beta · unofficial · not affiliated with ArtCraft/storytold · Made by Overprivileged</p>
       <p class="fine">Nothing uploaded. No login, cookies or tracking. <a href="https://github.com/overprivileged/craft-watch" target="_blank" rel="noopener">Open source (MIT)</a></p>
+      <p class="fine">App icons belong to their projects (Apache-2.0), shown only to identify the apps.</p>
     </footer>
   </div>
   <script src="check.js" type="module"></script>
