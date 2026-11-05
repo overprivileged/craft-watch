@@ -15,11 +15,11 @@ const SOURCES = [
 ];
 
 const CHOICES = [
-  { id: 'download', emoji: '⬇️', title: 'I want to download an app', sub: 'Which app, and which device?' },
-  { id: 'file', emoji: '📦', title: 'I already downloaded a file', sub: 'Drop it here. It stays on your computer.' },
-  { id: 'link', emoji: '🔗', title: 'Someone sent me a link', sub: 'Paste it here. We check it without opening it.' },
-  { id: 'other', emoji: '🧩', title: 'I found a plugin, website version or phone app', sub: 'Made by someone else?' },
-  { id: 'installed', emoji: '😟', title: 'I already installed something fake', sub: 'Let’s fix it in a few steps.' },
+  { id: 'download', icon: ['M12 4v11', 'M7.5 10.5 12 15l4.5-4.5', 'M5 19.5h14'], title: 'I want to download an app', sub: 'Which app, and which device?' },
+  { id: 'file', icon: ['M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z', 'M14 3.5v5h5', 'M12 11v6', 'M9.5 14.5 12 17l2.5-2.5'], title: 'I already downloaded a file', sub: 'Drop it here. It stays on your computer.' },
+  { id: 'link', icon: ['M10 14a3.5 3.5 0 0 0 4.95 0l3-3a3.5 3.5 0 0 0-4.95-4.95l-1.1 1.1', 'M14 10a3.5 3.5 0 0 0-4.95 0l-3 3a3.5 3.5 0 0 0 4.95 4.95l1.1-1.1'], title: 'Someone sent me a link', sub: 'Paste it here. We check it without opening it.' },
+  { id: 'other', icon: ['M9 3v4', 'M15 3v4', 'M7 7h10v3.5a5 5 0 0 1-10 0z', 'M12 15.5V21'], title: 'I found a plugin, website version or phone app', sub: 'Made by someone else?' },
+  { id: 'installed', icon: ['M12 3.5 21 19.5H3z', 'M12 10v4', 'M12 16.8v.2'], title: 'I already installed something fake', sub: 'Let’s fix it in a few steps.' },
 ];
 
 const DEVICES = [
@@ -195,6 +195,15 @@ function siteHint(host) {
     el('code', { class: 'addr' }, ...markedNodes(host, hit.marks)));
 }
 
+// Simple line icons: our own paths, 1.75 px stroke, drawn in the current colour (no external files).
+const NS = 'http://www.w3.org/2000/svg';
+const svgIcon = (paths) => {
+  const svg = document.createElementNS(NS, 'svg');
+  for (const [k, v] of Object.entries({ viewBox: '0 0 24 24', width: 24, height: 24, fill: 'none', stroke: 'currentColor', 'stroke-width': '1.75', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true', focusable: 'false' })) svg.setAttribute(k, String(v));
+  for (const d of paths) { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.append(p); }
+  return svg;
+};
+
 // ---- Routing --------------------------------------------------------------
 const SECTIONS = {
   '': $('home'),
@@ -220,7 +229,7 @@ function route() {
 function renderHome() {
   const order = isPhone() ? [CHOICES[2], ...CHOICES.filter((c) => c.id !== 'link')] : CHOICES; // phone visitors: the link check first
   $('home-choices').replaceChildren(...order.map((c) => el('a', { class: 'choice', href: `#${c.id}` },
-    el('span', { class: 'emoji', text: c.emoji, 'aria-hidden': 'true' }),
+    el('span', { class: 'emoji' }, svgIcon(c.icon)),
     el('span', {}, el('strong', { text: c.title }), el('small', { text: c.sub })),
     el('span', { class: 'chev', text: '›', 'aria-hidden': 'true' }))));
   $('report-home').href = reportUrl('');
@@ -238,13 +247,18 @@ const appBadge = (app) => {
   return el('span', { class: 'badge-wrap' }, letter, icon);
 };
 
+// Device tiles: the file type a computer download comes as. Phones: "no official app" unless an official phone file is listed.
 const DEVICE_LIST = [
-  { id: 'mac', label: 'Mac', emoji: '🍎' },
-  { id: 'windows', label: 'Windows', emoji: '🪟' },
-  { id: 'linux', label: 'Linux', emoji: '🐧' },
-  { id: 'android', label: 'Android', emoji: '🤖' },
-  { id: 'iphone', label: 'iPhone', emoji: '📱' },
+  { id: 'mac', label: 'Mac', hint: '.dmg' },
+  { id: 'windows', label: 'Windows', hint: '.exe / .msi' },
+  { id: 'linux', label: 'Linux', hint: '.AppImage / .deb' },
+  { id: 'android', label: 'Android', hint: 'no official app' },
+  { id: 'iphone', label: 'iPhone', hint: 'no official app' },
 ];
+const phoneHint = (id) => {
+  const wanted = id === 'android' ? /\.(apk|aab)$/i : /\.ipa$/i;
+  return allFiles.some((f) => wanted.test(f.name)) ? 'official file listed' : 'no official app';
+};
 
 function renderDownload() {
   const body = $('download-body');
@@ -272,7 +286,7 @@ function renderDownload() {
     el('p', { class: 'step', text: `Step 2 of 2 · ${app.name}: which device?` }),
     el('div', { class: 'devices' }, ...devices.map((d) => {
       const button = el('button', { class: 'device', type: 'button', 'aria-pressed': String(dl.device === d.id) },
-        el('span', { class: 'emoji', text: d.emoji, 'aria-hidden': 'true' }), el('span', { text: d.label }));
+        el('span', { class: 'text' }, el('strong', { text: d.label }), el('small', { text: d.id === 'android' || d.id === 'iphone' ? phoneHint(d.id) : d.hint })));
       button.addEventListener('click', () => { dl.device = d.id; renderDownload(); reveal(body.querySelector('.answer')); });
       return button;
     })));
