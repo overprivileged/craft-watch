@@ -135,8 +135,15 @@
       "repo": "tangency-labs/solidcraft",
       "colour": "#F87171",
       "download": "https://github.com/tangency-labs/solidcraft/releases"
+    },
+    {
+      "name": "MailCraft",
+      "repo": "UCS-Care-Group/mailcraft",
+      "colour": "#FB7185",
+      "download": "https://github.com/UCS-Care-Group/mailcraft/releases",
+      "maker": "UCS Care Group, in the ArtCraft launcher"
     }
   ],
   "_note_day_one": "day_one: the publish time of each app's first release as seen in our data on 24 Oct 2026 (ArtCraft: the launch release artcraft-v0.41.0). The landing headline counts commits since this date, so it never shrinks when the 30-day window moves on.",
-  "_note_new_apps": "Added 1 Nov 2026 from the ArtCraft launcher catalog: TextureCraft and Craft Anything (official, storytold) and SolidCraft (community app by Tangency Labs, its own repo). No day_one yet: day one = their earliest kept release until we pin it."
+  "_note_new_apps": "Added 1 Nov 2026 from the ArtCraft launcher catalog: TextureCraft and Craft Anything (official, storytold) and SolidCraft (community app by Tangency Labs, its own repo). No day_one yet: day one = their earliest kept release until we pin it. Added 15 Nov 2026: MailCraft (community app by UCS Care Group, its own repo, listed in the ArtCraft launcher; icon from its repo, MIT/Apache-2.0)."
 }
