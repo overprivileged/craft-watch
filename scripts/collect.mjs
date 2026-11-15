@@ -60,8 +60,8 @@ const SUMMARY_QUERY = `query($owner: String!, $name: String!, $since: GitTimesta
 
 // Counts only: commits on the default branch since a date, with no commit details.
 // Light records for the backfill: no files and no check runs (those are filled in when the item is next updated).
-const SEARCH_QUERY = `query($q: String!, $after: String) {
-  search(query: $q, type: ISSUE, first: 100, after: $after) {
+const SEARCH_QUERY = `query($q: String!, $after: String, $first: Int!) {
+  search(query: $q, type: ISSUE, first: $first, after: $after) {
     issueCount
     pageInfo { hasNextPage endCursor }
     nodes {
@@ -95,9 +95,9 @@ const COMMITS_SINCE_QUERY = `query($owner: String!, $name: String!, $since: GitT
   }
 }`;
 
-const PULLS_QUERY = `query($owner: String!, $name: String!, $after: String) {
+const PULLS_QUERY = `query($owner: String!, $name: String!, $after: String, $first: Int!) {
   repository(owner: $owner, name: $name) {
-    pullRequests(first: ${PAGE_SIZE}, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }, states: [OPEN, MERGED, CLOSED]) {
+    pullRequests(first: $first, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }, states: [OPEN, MERGED, CLOSED]) {
       pageInfo { hasNextPage endCursor }
       nodes {
         number title state isDraft createdAt updatedAt mergedAt closedAt reviewDecision url
@@ -112,9 +112,9 @@ const PULLS_QUERY = `query($owner: String!, $name: String!, $after: String) {
   }
 }`;
 
-const ISSUES_QUERY = `query($owner: String!, $name: String!, $after: String) {
+const ISSUES_QUERY = `query($owner: String!, $name: String!, $after: String, $first: Int!) {
   repository(owner: $owner, name: $name) {
-    issues(first: ${PAGE_SIZE}, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }, states: [OPEN, CLOSED]) {
+    issues(first: $first, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }, states: [OPEN, CLOSED]) {
       pageInfo { hasNextPage endCursor }
       nodes {
         number title state createdAt updatedAt closedAt url
@@ -173,13 +173,33 @@ async function scorecard(owner, name) {
   return { score: body.score, date: body.date };
 }
 
+// A page that GitHub can't build in time (very busy repos: big PRs with many files and checks) comes back as a
+// 502/504 or a cut-off body even after retries. Ask again for a smaller page instead of failing the whole app.
+const MIN_PAGE = 10;
+async function graphqlPage(query, variables, first) {
+  for (let size = first; ; size = Math.max(MIN_PAGE, Math.floor(size / 2))) {
+    try {
+      return { data: await graphql(query, { ...variables, first: size }), size };
+    } catch (error) {
+      if (size <= MIN_PAGE || !/cut off|HTTP 50[234]/.test(error.message)) throw error;
+      console.warn(`${error.message}; asking again for ${Math.max(MIN_PAGE, Math.floor(size / 2))} items per page`);
+    }
+  }
+}
+
 // Walks newest-first pages and stops at the first item older than stopAt (already known from earlier runs).
+// Reads at most MAX_PAGES * PAGE_SIZE items, whatever page size GitHub could serve.
 async function fetchNewer(owner, name, query, field, stopAt) {
   const nodes = [];
+  const budget = MAX_PAGES * PAGE_SIZE;
   let after = null;
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const data = await graphql(query, { owner, name, after });
-    const connection = data.repository[field];
+  let size = PAGE_SIZE;
+  let read = 0;
+  while (read < budget) {
+    const page = await graphqlPage(query, { owner, name, after }, Math.min(size, budget - read));
+    size = page.size;
+    const connection = page.data.repository[field];
+    read += connection.nodes.length;
     const fresh = connection.nodes.filter((n) => Date.parse(n.updatedAt) >= stopAt);
     nodes.push(...fresh);
     if (!connection.pageInfo.hasNextPage || fresh.length < connection.nodes.length) {
@@ -284,6 +304,7 @@ function cleanGaps(gaps) {
 // Returns the gaps still open.
 async function backfill(owner, name, kind, gaps, store, record, budget) {
   const type = kind === 'pulls' ? 'pr' : 'issue';
+  let searchSize = 100;
   let open = cleanGaps(gaps);
   while (open.length && budget.calls > 0) {
     const [from, to] = open[0];
@@ -293,7 +314,9 @@ async function backfill(owner, name, kind, gaps, store, record, budget) {
     while (!done && budget.calls > 0) {
       const q = `repo:${owner}/${name} is:${type} updated:${iso(sliceFrom)}..${iso(to)}`;
       budget.calls -= 1;
-      const result = (await graphql(SEARCH_QUERY, { q, after })).search;
+      const page = await graphqlPage(SEARCH_QUERY, { q, after }, searchSize);
+      searchSize = page.size;
+      const result = page.data.search;
       if (after === null && result.issueCount > SEARCH_CAP && to - sliceFrom > 60e3) {
         sliceFrom = to - (to - sliceFrom) / 2; // too many for one search: halve the slice and try again
         continue;
