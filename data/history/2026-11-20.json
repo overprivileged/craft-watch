@@ -1,0 +1,185 @@
+{
+  "date": "2026-11-20",
+  "apps": [
+    {
+      "repo": "storytold/artcraft",
+      "ok": true,
+      "commits_30d": 35,
+      "prs_open": 153,
+      "issues_open": 607,
+      "releases_30d": 1,
+      "latest": "artcraft-v0.41.1"
+    },
+    {
+      "repo": "storytold/photocraft",
+      "ok": true,
+      "commits_30d": 9399,
+      "prs_open": 1767,
+      "issues_open": 3875,
+      "releases_30d": 14,
+      "latest": "v0.23.1"
+    },
+    {
+      "repo": "storytold/filmcraft",
+      "ok": true,
+      "commits_30d": 1847,
+      "prs_open": 1012,
+      "issues_open": 1359,
+      "releases_30d": 13,
+      "latest": "v0.20.1"
+    },
+    {
+      "repo": "storytold/pdfcraft",
+      "ok": true,
+      "commits_30d": 4536,
+      "prs_open": 1507,
+      "issues_open": 1939,
+      "releases_30d": 15,
+      "latest": "v0.21.1"
+    },
+    {
+      "repo": "storytold/effectcraft",
+      "ok": true,
+      "commits_30d": 2879,
+      "prs_open": 380,
+      "issues_open": 914,
+      "releases_30d": 15,
+      "latest": "v0.24.1"
+    },
+    {
+      "repo": "storytold/figcraft",
+      "ok": true,
+      "commits_30d": 3185,
+      "prs_open": 101,
+      "issues_open": 248,
+      "releases_30d": 12,
+      "latest": "v0.18.1"
+    },
+    {
+      "repo": "storytold/lightcraft",
+      "ok": true,
+      "commits_30d": 2243,
+      "prs_open": 935,
+      "issues_open": 998,
+      "releases_30d": 14,
+      "latest": "v0.21.1"
+    },
+    {
+      "repo": "storytold/vectorcraft",
+      "ok": true,
+      "commits_30d": 14859,
+      "prs_open": 305,
+      "issues_open": 960,
+      "releases_30d": 13,
+      "latest": "v0.24.1"
+    },
+    {
+      "repo": "storytold/designcraft",
+      "ok": true,
+      "commits_30d": 2713,
+      "prs_open": 456,
+      "issues_open": 761,
+      "releases_30d": 13,
+      "latest": "v0.20.1"
+    },
+    {
+      "repo": "storytold/wordcraft",
+      "ok": true,
+      "commits_30d": 2192,
+      "prs_open": 1455,
+      "issues_open": 1784,
+      "releases_30d": 13,
+      "latest": "v0.18.1"
+    },
+    {
+      "repo": "storytold/gridcraft",
+      "ok": true,
+      "commits_30d": 1918,
+      "prs_open": 1174,
+      "issues_open": 1291,
+      "releases_30d": 12,
+      "latest": "v0.19.1"
+    },
+    {
+      "repo": "storytold/deckcraft",
+      "ok": true,
+      "commits_30d": 1229,
+      "prs_open": 456,
+      "issues_open": 461,
+      "releases_30d": 12,
+      "latest": "v0.18.1"
+    },
+    {
+      "repo": "storytold/cadcraft",
+      "ok": true,
+      "commits_30d": 1060,
+      "prs_open": 723,
+      "issues_open": 722,
+      "releases_30d": 13,
+      "latest": "v0.20.1"
+    },
+    {
+      "repo": "storytold/soundcraft",
+      "ok": true,
+      "commits_30d": 773,
+      "prs_open": 284,
+      "issues_open": 387,
+      "releases_30d": 12,
+      "latest": "v0.20.1"
+    },
+    {
+      "repo": "storytold/AniCraft",
+      "ok": true,
+      "commits_30d": 1159,
+      "prs_open": 56,
+      "issues_open": 105,
+      "releases_30d": 3,
+      "latest": "v0.2.1"
+    },
+    {
+      "repo": "storytold/craft-launcher",
+      "ok": true,
+      "commits_30d": 488,
+      "prs_open": 219,
+      "issues_open": 591,
+      "releases_30d": 17,
+      "latest": "v0.19.2"
+    },
+    {
+      "repo": "storytold/texturecraft",
+      "ok": true,
+      "commits_30d": 1070,
+      "prs_open": 78,
+      "issues_open": 102,
+      "releases_30d": 9,
+      "latest": "v0.6.1"
+    },
+    {
+      "repo": "storytold/craft-anything",
+      "ok": true,
+      "commits_30d": 1604,
+      "prs_open": 185,
+      "issues_open": 219,
+      "releases_30d": 7,
+      "latest": "v0.6.1"
+    },
+    {
+      "repo": "tangency-labs/solidcraft",
+      "ok": true,
+      "commits_30d": 7614,
+      "prs_open": 1021,
+      "issues_open": 6678,
+      "releases_30d": 54,
+      "latest": "v0.45.0"
+    },
+    {
+      "repo": "UCS-Care-Group/mailcraft",
+      "ok": true,
+      "commits_30d": 2963,
+      "prs_open": 121,
+      "issues_open": 275,
+      "releases_30d": 11,
+      "latest": "v0.14.0"
+    }
+  ]
+}
